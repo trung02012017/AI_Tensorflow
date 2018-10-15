@@ -56,7 +56,8 @@ def get_data_samples(data, n_slidings, predicted_aspect, rate):
     return x_train, y_train, x_test, y_test
 
 
-def model_rnn(X, n_layers, n_lstm_cells):
+def model_rnn(X, n_lstm_cells):
+    n_layers = len(n_lstm_cells)
     cells = []
     for i in range(n_layers):
         cell = tf.nn.rnn_cell.LSTMCell(num_units=n_lstm_cells[i], state_is_tuple=True)
@@ -89,7 +90,7 @@ def main():
     batch_size = 32
     learning_rate = 0.005
     num_epochs = 100
-    rnn_cellsize = 32
+    rnn_cellsize = [8, 16, 8, 8]
     num_batches = int(x_train.shape[0] / batch_size)
 
     timestep = n_slidings
@@ -129,6 +130,8 @@ def main():
 
         plt.plot(y_test_act, 'r', label="y actual")
         plt.plot(output_test, 'b', label="y predict")
+        plt.legend()
+        plt.title("Multi-layers LSTM :  CPU & RAM => CPU ... Loss = %f" % (loss_test_act))
         plt.show()
 
 

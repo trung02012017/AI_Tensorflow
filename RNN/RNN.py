@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 tf.set_random_seed(1)
 np.random.seed(1)
 
+
 def get_goodletrace_data(path, aspects):
     names = ["time_stamp", "numberOfTaskIndex", "numberOfMachineId", "meanCPUUsage", "canonical memory usage",
              "AssignMem", "unmapped_cache_usage", "page_cache_usage", "max_mem_usage", "mean_diskIO_time",
@@ -125,8 +126,10 @@ def main():
         loss_test_act = np.mean(np.abs(output_test - y_test_act))
         print(loss_test_act)
 
-        plt.plot(y_test_act, 'r', label="y actual")
-        plt.plot(output_test, 'b', label="y predict")
+        plt.plot(y_test_act, 'r-', label="y actual")
+        plt.plot(output_test, 'b-', label="y predict")
+        plt.legend()
+        plt.title("Single layer LSTM :  CPU & RAM => CPU ... Loss = %f" % (loss_test_act))
         plt.show()
 
 
