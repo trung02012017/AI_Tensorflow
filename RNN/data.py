@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
-
+import matplotlib.pyplot as plt
+import pandas as pd
+import os.path
 
 def get_goodletrace_data(path, aspects):
     names = ["time_stamp", "numberOfTaskIndex", "numberOfMachineId", "meanCPUUsage", "canonical memory usage",
@@ -63,3 +65,34 @@ def getValidationSet(x_train, y_train, n):
     y_train_new = y_train[0:n_train_new, :].reshape((n_train_new, 1))
 
     return x_train_new, y_train_new, x_val, y_val
+
+
+def saveData(combination_i, loss_test_act, loss_valid_value, loss_train_value, epoch_i, result_file_path):
+    combination_x = [combination_i]
+    result = {'combination': combination_x,
+              'loss': loss_test_act,
+              'epoch': epoch_i}
+
+    df = pd.DataFrame(result)
+    if not os.path.exists(result_file_path):
+        columns = ['combination', 'loss', 'epoch']
+        df[columns]
+        df.to_csv('result.csv', index=False, columns=columns)
+    else:
+        with open('result.csv', 'a') as csv_file:
+            df.to_csv(csv_file, header=False, index=False)
+
+    plt.figure(2)
+    plt.plot(loss_valid_value, 'r-', label="loss validation")
+    plt.plot(loss_train_value, 'b-', label="loss train")
+    plt.legend()
+    name = ''
+    name += str(combination_i)
+    name += ' epoch='
+    name += str(epoch_i)
+    name += ' loss='
+    name += str(loss_test_act)
+    name += '.png'
+    print(name)
+    plt.savefig(name)
+    plt.clf()

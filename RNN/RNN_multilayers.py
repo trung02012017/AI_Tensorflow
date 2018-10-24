@@ -1,9 +1,6 @@
 import data as data
 import numpy as np
 import tensorflow as tf
-import matplotlib.pyplot as plt
-import pandas as pd
-import os.path
 
 tf.set_random_seed(1)
 np.random.seed(1)
@@ -42,7 +39,7 @@ def main():
     path = "../Data/google_trace_timeseries/data_resource_usage_5Minutes_6176858948.csv"
     aspects = ["meanCPUUsage", "canonical memory usage"]
     predicted_aspect = "meanCPUUsage"
-    n_slidings = [1, 2, 3, 4, 5, 6]
+    n_slidings = [3, 4]
     batch_sizes = [16, 32]
     learning_rate = 0.005
     num_epochs = 120
@@ -133,34 +130,8 @@ def main():
 
             loss_test_act = np.mean(np.abs(output_test - y_test_act))
             print(loss_test_act)
+            data.saveData(combination_i, loss_test_act, loss_valid_value, loss_train_value, epoch_i, result_file_path)
 
-            combination_x = [combination_i]
-            result = {'combination': combination_x,
-                      'loss': loss_test_act}
-
-            df = pd.DataFrame(result)
-            if not os.path.exists(result_file_path):
-                columns = ['combination', 'loss']
-                df[columns]
-                df.to_csv('result.csv', index=False, columns=columns)
-            else:
-                with open('result.csv', 'a') as csv_file:
-                    df.to_csv(csv_file, header=False, index=False)
-
-            plt.figure(2)
-            plt.plot(loss_valid_value, 'r-', label="loss validation")
-            plt.plot(loss_train_value, 'b-', label="loss train")
-            plt.legend()
-            name = ''
-            name += str(combination_i)
-            name += ' epoch='
-            name += str(epoch_i)
-            name += ' loss='
-            name += str(loss_test_act)
-            name += '.png'
-            print(name)
-            plt.savefig(name)
-            plt.clf()
 
 if __name__ == '__main__':
     main()
