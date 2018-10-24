@@ -1,72 +1,25 @@
-import pandas as pd
+import data as data
 import numpy as np
 import tensorflow as tf
+import pandas as pd
+import os.path
 import matplotlib.pyplot as plt
 
 tf.set_random_seed(1)
 np.random.seed(1)
 
 
-def get_goodletrace_data(path, aspects):
-    names = ["time_stamp", "numberOfTaskIndex", "numberOfMachineId", "meanCPUUsage", "canonical memory usage",
-             "AssignMem", "unmapped_cache_usage", "page_cache_usage", "max_mem_usage", "mean_diskIO_time",
-             "mean_local_disk_space", "max_cpu_usage", "max_disk_io_time", "cpi", "mai", "sampling_portion", "agg_type",
-             "sampled_cpu_usage"]
-    df = pd.read_csv(path, names=names)
-    data = df.loc[:, aspects].values
-
-    a_max = np.amax(data, axis=0)
-    a_min = np.amin(data, axis=0)
-
-    normalized_data = (data - a_min)/(a_max - a_min)
-
-    return normalized_data, a_max, a_min
-
-
-def get_data_samples(data, n_slidings, predicted_aspect, rate):
-
-    sliding = n_slidings
-    n_samples = data.shape[0]
-    n_aspects = data.shape[1]
-
-    data_samples = n_samples - sliding
-    data_feed = np.zeros((data_samples, sliding, n_aspects))
-
-    for i in range(data_samples):
-        a = i
-        b = i + 3
-        data_point = data[a:b, :]
-        data_feed[i] += data_point
-
-    n_test = int(data_samples/rate)
-    n_train = int(data_samples - n_test)
-
-    x_train = data_feed[0:n_train, :, :].reshape((n_train, sliding, n_aspects))
-    x_test = data_feed[n_train:data_samples, :, :].reshape((n_test, sliding, n_aspects))
-
-    y_feed = data[sliding:n_samples, :]
-    if predicted_aspect == "meanCPUUsage":
-        y_train = y_feed[0:n_train, 0].reshape((n_train, 1))
-        y_test = y_feed[n_train:data_samples, 0].reshape((n_test, 1))
-
-    if predicted_aspect == "canonical memory usage":
-        y_train = y_feed[0:n_train, 1].reshape((n_train, 1))
-        y_test = y_feed[n_train:data_samples, 1].reshape((n_test, 1))
-
-
-    return x_train, y_train, x_test, y_test
-
-
-def model_rnn(X, n_lstm_cells):
+def model_rnn(X, n_lstm_cells, activation):
     size = n_lstm_cells
-    rnn_cell = tf.nn.rnn_cell.LSTMCell(num_units=size)
 
-    outputs, (h_c, h_n) = tf.nn.dynamic_rnn(
-        rnn_cell,
-        X,
-        initial_state=None,
+    if activation == "tanh":
+        rnn_cell = tf.nn.rnn_cell.LSTMCell(num_units=size)
+    if activation == "sigmoid":
+        rnn_cell = tf.nn.rnn_cell.LSTMCell(num_units=size, activation=tf.nn.sigmoid)
+    outputs, state = tf.nn.dynamic_rnn(
+        cell=rnn_cell,
+        inputs=X,
         dtype=tf.float32,
-        time_major=False,
     )
 
     output = tf.layers.dense(outputs[:, -1, :], 1)
@@ -79,59 +32,122 @@ def main():
     path = "../Data/google_trace_timeseries/data_resource_usage_5Minutes_6176858948.csv"
     aspects = ["meanCPUUsage", "canonical memory usage"]
     predicted_aspect = "meanCPUUsage"
-    n_slidings = 3
-    rate = 5
-
-    nor_data, amax, amin = get_goodletrace_data(path, aspects)
-    x_train, y_train, x_test, y_test = get_data_samples(nor_data, n_slidings, predicted_aspect, rate)
-
-    batch_size = 32
+    n_slidings = [3, 4, 5]
+    batch_sizes = [16, 32]
     learning_rate = 0.005
-    num_epochs = 100
-    rnn_cellsize = 32
-    num_batches = int(x_train.shape[0] / batch_size)
+    num_epochs = 120
+    rnn_cellsizes = [4, 8, 16]
+    activations = ["tanh", "sigmoid"]
+    rate = 5
+    result_file_path = 'result.csv'
 
-    timestep = n_slidings
-    input_dim = len(aspects)
-    X = tf.placeholder(tf.float32, [None, timestep, input_dim])
-    y = tf.placeholder(tf.float32, [None, 1])
+    combination = []
+    for n_sliding in n_slidings:
+        for batch_size in batch_sizes:
+            for rnn_cellsize in rnn_cellsizes:
+                for activation in activations:
+                    combination_i = [n_sliding, batch_size, rnn_cellsize, activation]
+                    combination.append(combination_i)
+    print(combination)
 
-    output = model_rnn(X, rnn_cellsize)
+    for combination_i in combination:
+        tf.reset_default_graph()
+        print(combination_i)
 
-    loss = tf.reduce_mean(tf.squared_difference(output, y))
-    optimizer = tf.train.AdamOptimizer(learning_rate).minimize(loss)
+        n_sliding = combination_i[0]
+        batch_size = combination_i[1]
+        rnn_unit = combination_i[2]
+        activation = combination_i[3]
 
-    init_op = tf.global_variables_initializer()
-    with tf.Session() as sess:
-        sess.run(init_op)
+        nor_data, amax, amin = data.get_goodletrace_data(path, aspects)
+        x_train, y_train, x_test, y_test = data.get_data_samples(nor_data, n_sliding, predicted_aspect, rate)
+        x_train, y_train, x_valid, y_valid = data.getValidationSet(x_train, y_train, 5)
 
-        for i in range(num_epochs):
-            for j in range(num_batches):
-                a = batch_size * j
-                b = a + batch_size
-                x_batch = x_train[a:b, :, :]
-                y_batch = y_train[a:b, :]
+        loss_train_value = []
+        loss_valid_value = []
 
-                loss_j, _ = sess.run([loss, optimizer], feed_dict={X: x_batch,
-                                                                   y: y_batch})
-            loss_i, _ = sess.run([loss, optimizer], feed_dict={X: x_train,
-                                                               y: y_train})
-            print(loss_i)
+        num_batches = int(x_train.shape[0]/batch_size)
+        timestep = n_sliding
+        input_dim = len(aspects)
+        X = tf.placeholder(tf.float32, [None, timestep, input_dim])
+        y = tf.placeholder(tf.float32, [None, 1])
 
-        output_test = sess.run(output, feed_dict={X: x_test,
-                                                  y: y_test})
-        output_test = output_test * (amax[0] - amin[0]) + amin[0]
-        y_test_act = y_test*(amax[0] - amin[0]) + amin[0]
+        output = model_rnn(X, rnn_unit, activation)
 
-        loss_test_act = np.mean(np.abs(output_test - y_test_act))
-        print(loss_test_act)
+        loss = tf.reduce_mean(tf.squared_difference(output, y))
+        optimizer = tf.train.AdamOptimizer(learning_rate).minimize(loss)
 
-        plt.plot(y_test_act, 'r-', label="y actual")
-        plt.plot(output_test, 'b-', label="y predict")
-        plt.legend()
-        plt.title("Single layer LSTM :  CPU & RAM => CPU ... Loss = %f" % (loss_test_act))
-        plt.show()
+        init_op = tf.global_variables_initializer()
+        with tf.Session() as sess:
+            sess.run(init_op)
 
+            pre_loss_valid = 100
+            x = 0
+            early_stopping_val = 5
+            epoch_i = 0
+            for i in range(num_epochs):
+                for j in range(num_batches):
+                    a = batch_size * j
+                    b = a + batch_size
+                    x_batch = x_train[a:b, :, :]
+                    y_batch = y_train[a:b, :]
+                    # print(x_batch.shape, y_batch.shape)
+
+                    loss_j, _ = sess.run([loss, optimizer], feed_dict={X: x_batch,
+                                                                       y: y_batch})
+                loss_train_i = sess.run(loss, feed_dict={X: x_train,
+                                                         y: y_train})
+                loss_valid_i = sess.run(loss, feed_dict={X: x_valid,
+                                                         y: y_valid})
+                print(loss_train_i, loss_valid_i)
+                loss_train_value.append(loss_train_i)
+                loss_valid_value.append(loss_valid_i)
+
+                if loss_valid_i > pre_loss_valid:
+                    x = x+1
+                    if x == early_stopping_val:
+                        break
+                else:
+                    x = 0
+                print(x)
+                pre_loss_valid = loss_valid_i
+                epoch_i+=1
+
+            output_test = sess.run(output, feed_dict={X: x_test,
+                                                      y: y_test})
+            output_test = output_test * (amax[0] - amin[0]) + amin[0]
+            y_test_act = y_test*(amax[0] - amin[0]) + amin[0]
+
+            loss_test_act = np.mean(np.abs(output_test - y_test_act))
+            print(loss_test_act)
+
+            combination_x = [combination_i]
+            result = {'combination': combination_x,
+                      'loss': loss_test_act}
+
+            df = pd.DataFrame(result)
+            if not os.path.exists(result_file_path):
+                columns = ['combination', 'loss']
+                df[columns]
+                df.to_csv('result.csv', index=False, columns=columns)
+            else:
+                with open('result.csv', 'a') as csv_file:
+                    df.to_csv(csv_file, header=False, index=False)
+
+            plt.figure(2)
+            plt.plot(loss_valid_value, 'r-', label="loss validation")
+            plt.plot(loss_train_value, 'b-', label="loss train")
+            plt.legend()
+            name = ''
+            name += str(combination_i)
+            name += ' epoch='
+            name += str(epoch_i)
+            name += ' loss='
+            name += str(loss_test_act)
+            name += '.png'
+            print(name)
+            plt.savefig(name)
+            plt.clf()
 
 if __name__ == '__main__':
     main()
