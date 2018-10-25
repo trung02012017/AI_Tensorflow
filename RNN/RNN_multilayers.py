@@ -55,11 +55,9 @@ def main():
                 for activation in activations:
                     combination_i = [n_sliding, batch_size, rnn_cellsize, activation]
                     combination.append(combination_i)
-    print(combination)
 
     for combination_i in combination:
         tf.reset_default_graph()
-        print(combination_i)
 
         n_sliding = combination_i[0]
         batch_size = combination_i[1]
@@ -109,7 +107,6 @@ def main():
                                                          y: y_train})
                 loss_valid_i = sess.run(loss, feed_dict={X: x_valid,
                                                          y: y_valid})
-                print(loss_train_i, loss_valid_i)
                 loss_train_value.append(loss_train_i)
                 loss_valid_value.append(loss_valid_i)
 
@@ -119,7 +116,6 @@ def main():
                         break
                 else:
                     x = 0
-                print(x)
                 pre_loss_valid = loss_valid_i
                 epoch_i += 1
 
@@ -129,8 +125,9 @@ def main():
             y_test_act = y_test*(amax[0] - amin[0]) + amin[0]
 
             loss_test_act = np.mean(np.abs(output_test - y_test_act))
-            print(loss_test_act)
-            data.saveData(combination_i, loss_test_act, loss_valid_value, loss_train_value, epoch_i, result_file_path)
+            name = data.saveData(combination_i, loss_test_act, loss_valid_value, loss_train_value, epoch_i, result_file_path)
+
+            print(name)
 
 
 if __name__ == '__main__':

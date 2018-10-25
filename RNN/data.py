@@ -96,3 +96,5 @@ def saveData(combination_i, loss_test_act, loss_valid_value, loss_train_value, e
     print(name)
     plt.savefig(name)
     plt.clf()
+
+    return name
