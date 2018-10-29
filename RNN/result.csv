@@ -1,0 +1,2 @@
+combination,loss,epoch
+"[4, 32, [16, 8], 'sigmoid']",1.0106733368676746,15
