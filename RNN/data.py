@@ -77,10 +77,10 @@ def saveData(combination_i, loss_test_act, loss_valid_value, loss_train_value, e
     if not os.path.exists(result_file_path):
         columns = ['combination', 'loss', 'epoch']
         df[columns]
-        df.to_csv('result.csv', index=False, columns=columns)
+        df.to_csv('result_multi.csv', index=False, columns=columns)
     else:
-        with open('result.csv', 'a') as csv_file:
-            df.to_csv(csv_file, header=False, index=False)
+        with open('result_multi.csv', 'a') as csv_file:
+            df.to_csv(csv_file, mode='a', header=False, index=False)
 
     plt.figure(2)
     plt.plot(loss_valid_value, 'r-', label="loss validation")

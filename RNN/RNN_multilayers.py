@@ -42,9 +42,9 @@ def main():
     n_slidings = [3, 4]
     batch_sizes = [16, 32]
     learning_rate = 0.005
-    num_epochs = 120
-    rnn_cellsizes = [[4], [8], [16], [8, 4], [16, 8]]
-    activations = ["relu", "tanh", "sigmoid"]
+    num_epochs = 1000
+    rnn_cellsizes = [[4], [8], [16], [32], [8, 4], [16, 8], [32, 4]]
+    activations = ["tanh", "sigmoid"]
     rate = 5
     result_file_path = 'result_multi.csv'
 
@@ -87,9 +87,9 @@ def main():
         with tf.Session() as sess:
             sess.run(init_op)
 
-            pre_loss_valid = 100
-            x = 0
-            early_stopping_val = 5
+            # pre_loss_valid = 100
+            # x = 0
+            # early_stopping_val = 5
             epoch_i = 0
             for i in range(num_epochs):
                 for j in range(num_batches + 1):
@@ -110,13 +110,13 @@ def main():
                 loss_train_value.append(loss_train_i)
                 loss_valid_value.append(loss_valid_i)
 
-                if loss_valid_i > pre_loss_valid:
-                    x = x+1
-                    if x == early_stopping_val:
-                        break
-                else:
-                    x = 0
-                pre_loss_valid = loss_valid_i
+                # if loss_valid_i > pre_loss_valid:
+                #     x = x+1
+                #     if x == early_stopping_val:
+                #         break
+                # else:
+                #     x = 0
+                # pre_loss_valid = loss_valid_i
                 epoch_i += 1
 
             output_test = sess.run(output, feed_dict={X: x_test,
