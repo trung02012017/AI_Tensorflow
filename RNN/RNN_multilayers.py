@@ -42,7 +42,7 @@ def main():
     n_slidings = [3, 4]
     batch_sizes = [16, 32]
     learning_rate = 0.005
-    num_epochs = 1000
+    num_epochs = 200
     rnn_cellsizes = [[4], [8], [16], [32], [8, 4], [16, 8], [32, 4]]
     activations = ["tanh", "sigmoid"]
     rate = 5
