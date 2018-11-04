@@ -1,6 +1,8 @@
 import data as data
 import numpy as np
 import tensorflow as tf
+from datetime import datetime
+import sklearn.metrics as sk
 
 tf.set_random_seed(1)
 np.random.seed(1)
@@ -39,11 +41,11 @@ def main():
     path = "../Data/google_trace_timeseries/data_resource_usage_5Minutes_6176858948.csv"
     aspects = ["meanCPUUsage", "canonical memory usage"]
     predicted_aspect = "meanCPUUsage"
-    n_slidings = [3, 4]
+    n_slidings = [3, 4, 5, 6]
     batch_sizes = [16, 32]
     learning_rate = 0.005
-    num_epochs = 200
-    rnn_cellsizes = [[4], [8], [16], [32], [8, 4], [16, 8], [32, 4]]
+    num_epochs = 1000
+    rnn_cellsizes = [[4], [8], [16], [32], [4, 2], [8, 4], [16, 4], [16, 8], [32,4], [32, 8], [32, 16]]
     activations = ["tanh", "sigmoid"]
     rate = 5
     result_file_path = 'result_multi.csv'
@@ -85,6 +87,10 @@ def main():
 
         init_op = tf.global_variables_initializer()
         with tf.Session() as sess:
+
+            t = datetime.now().time()
+            start_time = (t.hour * 60 + t.minute) * 60 + t.second
+
             sess.run(init_op)
 
             # pre_loss_valid = 100
@@ -125,7 +131,22 @@ def main():
             y_test_act = y_test*(amax[0] - amin[0]) + amin[0]
 
             loss_test_act = np.mean(np.abs(output_test - y_test_act))
-            name = data.saveData(combination_i, loss_test_act, loss_valid_value, loss_train_value, epoch_i, result_file_path)
+
+            explained_variance_score = sk.explained_variance_score(y_test_act, output_test)
+            mean_absolute_error = sk.mean_absolute_error(y_test_act, output_test)
+            mean_squared_error = sk.mean_squared_error(y_test_act, output_test)
+            median_absolute_error = sk.median_absolute_error(y_test_act, output_test)
+            r2_score = sk.r2_score(y_test_act, output_test)
+
+            t = datetime.now().time()
+            end_time = (t.hour * 60 + t.minute) * 60 + t.second
+
+            training_time = (end_time - start_time)
+
+            name = data.saveData(combination_i, loss_test_act, loss_valid_value, loss_train_value, epoch_i,
+                                 result_file_path, output_test, y_test_act, explained_variance_score,
+                                 mean_absolute_error, mean_squared_error, median_absolute_error,
+                                 r2_score, training_time)
 
             print(name)
 

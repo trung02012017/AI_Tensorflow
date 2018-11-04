@@ -67,15 +67,23 @@ def getValidationSet(x_train, y_train, n):
     return x_train_new, y_train_new, x_val, y_val
 
 
-def saveData(combination_i, loss_test_act, loss_valid_value, loss_train_value, epoch_i, result_file_path):
+def saveData(combination_i, loss_test_act, loss_valid_value, loss_train_value, epoch_i, result_file_path,
+             output_test, y_test_act, explained_variance_score, mean_absolute_error, mean_squared_error,
+             median_absolute_error, r2_score, training_time):
     combination_x = [combination_i]
     result = {'combination': combination_x,
-              'loss': loss_test_act,
-              'epoch': epoch_i}
+              'epoch': epoch_i,
+              'training_time': training_time,
+              'explained_variance_score': explained_variance_score,
+              'mean_absolute_error': mean_absolute_error,
+              'mean_squared_error': mean_squared_error,
+              'median_absolute_error': median_absolute_error,
+              'r2_score': r2_score}
 
     df = pd.DataFrame(result)
     if not os.path.exists(result_file_path):
-        columns = ['combination', 'loss', 'epoch']
+        columns = ['combination', 'epoch', 'training_time', 'explained_variance_score', 'mean_absolute_error',
+                   'mean_squared_error', 'median_absolute_error', 'r2_score']
         df[columns]
         df.to_csv('result_multi.csv', index=False, columns=columns)
     else:
@@ -86,14 +94,28 @@ def saveData(combination_i, loss_test_act, loss_valid_value, loss_train_value, e
     plt.plot(loss_valid_value, 'r-', label="loss validation")
     plt.plot(loss_train_value, 'b-', label="loss train")
     plt.legend()
-    name = ''
+    name = 'loss '
     name += str(combination_i)
     name += ' epoch='
     name += str(epoch_i)
     name += ' loss='
     name += str(loss_test_act)
     name += '.png'
-    print(name)
+    plt.savefig(name)
+    plt.clf()
+
+    plt.figure(2)
+    plt.plot(y_test_act, 'r-', label="actual y")
+    plt.plot(output_test, 'b-', label="predicted y")
+    plt.legend()
+    name = 'result '
+    name += str(combination_i)
+    name += ' epoch='
+    name += str(epoch_i)
+    name += ' loss='
+    name += str(loss_test_act)
+    # print(name)
+    name += '.png'
     plt.savefig(name)
     plt.clf()
 
