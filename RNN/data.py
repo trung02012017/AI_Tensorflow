@@ -69,11 +69,13 @@ def getValidationSet(x_train, y_train, n):
 
 def saveData(combination_i, loss_test_act, loss_valid_value, loss_train_value, epoch_i, result_file_path,
              output_test, y_test_act, explained_variance_score, mean_absolute_error, mean_squared_error,
-             median_absolute_error, r2_score, training_time):
+             median_absolute_error, r2_score, training_time, testing_time, system_time):
     combination_x = [combination_i]
     result = {'combination': combination_x,
               'epoch': epoch_i,
               'training_time': training_time,
+              'testing_time': testing_time,
+              'system_time': system_time,
               'explained_variance_score': explained_variance_score,
               'mean_absolute_error': mean_absolute_error,
               'mean_squared_error': mean_squared_error,
@@ -82,8 +84,8 @@ def saveData(combination_i, loss_test_act, loss_valid_value, loss_train_value, e
 
     df = pd.DataFrame(result)
     if not os.path.exists(result_file_path):
-        columns = ['combination', 'epoch', 'training_time', 'explained_variance_score', 'mean_absolute_error',
-                   'mean_squared_error', 'median_absolute_error', 'r2_score']
+        columns = ['combination', 'epoch', 'training_time', 'testing_time', 'system_time', 'explained_variance_score',
+                   'mean_absolute_error', 'mean_squared_error', 'median_absolute_error', 'r2_score']
         df[columns]
         df.to_csv('result_multi.csv', index=False, columns=columns)
     else:
