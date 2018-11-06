@@ -44,7 +44,7 @@ def main():
     n_slidings = [3, 4, 5, 6]
     batch_sizes = [16, 32]
     learning_rate = 0.005
-    num_epochs = 1000
+    num_epochs = 2
     rnn_cellsizes = [[4], [8], [16], [32], [4, 2], [8, 4], [16, 4], [16, 8], [32,4], [32, 8], [32, 16]]
     activations = ["tanh", "sigmoid"]
     rate = 5
@@ -68,7 +68,7 @@ def main():
 
         nor_data, amax, amin = data.get_goodletrace_data(path, aspects)
         x_train, y_train, x_test, y_test = data.get_data_samples(nor_data, n_sliding, predicted_aspect, rate)
-        x_train, y_train, x_valid, y_valid = data.getValidationSet(x_train, y_train, 5)
+        # x_train, y_train, x_valid, y_valid = data.getValidationSet(x_train, y_train, 5)
 
         loss_train_value = []
         loss_valid_value = []
@@ -111,10 +111,10 @@ def main():
                                                                        y: y_batch})
                 loss_train_i = sess.run(loss, feed_dict={X: x_train,
                                                          y: y_train})
-                loss_valid_i = sess.run(loss, feed_dict={X: x_valid,
-                                                         y: y_valid})
+                # loss_valid_i = sess.run(loss, feed_dict={X: x_valid,
+                #                                          y: y_valid})
                 loss_train_value.append(loss_train_i)
-                loss_valid_value.append(loss_valid_i)
+                # loss_valid_value.append(loss_valid_i)
 
                 # if loss_valid_i > pre_loss_valid:
                 #     x = x+1
@@ -149,10 +149,10 @@ def main():
             median_absolute_error = sk.median_absolute_error(y_test_act, output_test)
             r2_score = sk.r2_score(y_test_act, output_test)
 
-            t = datetime.now().time()
-            end_time = (t.hour * 60 + t.minute) * 60 + t.second
-
-            training_time = (end_time - start_time)
+            # t = datetime.now().time()
+            # end_time = (t.hour * 60 + t.minute) * 60 + t.second
+            #
+            # training_time = (end_time - start_time)
 
             name = data.saveData(combination_i, loss_test_act, loss_valid_value, loss_train_value, epoch_i,
                                  result_file_path, output_test, y_test_act, explained_variance_score,

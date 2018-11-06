@@ -92,19 +92,19 @@ def saveData(combination_i, loss_test_act, loss_valid_value, loss_train_value, e
         with open('result_multi.csv', 'a') as csv_file:
             df.to_csv(csv_file, mode='a', header=False, index=False)
 
-    plt.figure(2)
-    plt.plot(loss_valid_value, 'r-', label="loss validation")
-    plt.plot(loss_train_value, 'b-', label="loss train")
-    plt.legend()
-    name = 'loss '
-    name += str(combination_i)
-    name += ' epoch='
-    name += str(epoch_i)
-    name += ' loss='
-    name += str(loss_test_act)
-    name += '.png'
-    plt.savefig(name)
-    plt.clf()
+    # plt.figure(2)
+    # plt.plot(loss_valid_value, 'r-', label="loss validation")
+    # plt.plot(loss_train_value, 'b-', label="loss train")
+    # plt.legend()
+    # name = 'loss '
+    # name += str(combination_i)
+    # name += ' epoch='
+    # name += str(epoch_i)
+    # name += ' loss='
+    # name += str(loss_test_act)
+    # name += '.png'
+    # plt.savefig(name)
+    # plt.clf()
 
     plt.figure(2)
     plt.plot(y_test_act, 'r-', label="actual y")
