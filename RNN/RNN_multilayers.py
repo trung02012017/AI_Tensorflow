@@ -125,10 +125,21 @@ def main():
                 # pre_loss_valid = loss_valid_i
                 epoch_i += 1
 
+            t = datetime.now().time()
+            train_time = (t.hour * 60 + t.minute) * 60 + t.second
+
+            training_time = train_time - start_time
+
             output_test = sess.run(output, feed_dict={X: x_test,
                                                       y: y_test})
             output_test = output_test * (amax[0] - amin[0]) + amin[0]
             y_test_act = y_test*(amax[0] - amin[0]) + amin[0]
+
+            t = datetime.now().time()
+            test_time = (t.hour * 60 + t.minute) * 60 + t.second
+            testing_time = test_time - train_time
+
+            system_time = test_time - start_time
 
             loss_test_act = np.mean(np.abs(output_test - y_test_act))
 
@@ -146,7 +157,7 @@ def main():
             name = data.saveData(combination_i, loss_test_act, loss_valid_value, loss_train_value, epoch_i,
                                  result_file_path, output_test, y_test_act, explained_variance_score,
                                  mean_absolute_error, mean_squared_error, median_absolute_error,
-                                 r2_score, training_time)
+                                 r2_score, training_time, testing_time, system_time)
 
             print(name)
 
